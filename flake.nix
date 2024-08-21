@@ -46,9 +46,9 @@
               ++ (lispTestDeps pkgs.sbcl.pkgs);
           };
 
-          sbcl = pkgs.sbcl.withOverrides
-            (self: super: { inherit cl-web-app-example; }).withPackages
-            (ps: [ ps.cl-web-app-example ]);
+          sbcl' = pkgs.sbcl.withOverrides
+            (self: super: { inherit cl-web-app-example; });
+          sbcl = sbcl'.withPackages (ps: [ ps.cl-web-app-example ]);
 
           run-server = sbcl:
             pkgs.writeScriptBin "run-server" ''

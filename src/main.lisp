@@ -75,9 +75,8 @@
   (wsd:send con "Welcome"))
 
 (defun ws-handle-close-connection (con)
-  (when con
-    (ws-broadcast-from con "Left the chat")
-    (remhash con *connections*)))
+  (ws-broadcast-from con "Left the chat")
+  (remhash con *connections*))
 
 (defun ws-on-message (con)
   (lambda (msg)
