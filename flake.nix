@@ -9,18 +9,22 @@
       nixpkgsFor = forAllSystems (system:
         import nixpkgs {
           inherit system;
-          overlays = [ ];
+          overlays = [
+            (final: prev: {
+              sbcl = prev.sbcl.withOverrides (self: super: { });
+            })
+          ];
         });
       lispDeps = ps:
         with ps; [
           alexandria # general utilities
           clack # web application environment
+          clack-handler-hunchentoot # web server
           com_dot_inuoe_dot_jzon # json
           lack-middleware-mount # for mounting websocket driver
           lack-middleware-static # static middleware
           spinneret # html5 generator
           websocket-driver # web sockets
-          woo # web server
         ];
       lispTestDeps = ps:
         with ps;

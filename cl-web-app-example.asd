@@ -5,7 +5,7 @@
   :license ""
   :serial t
   
-  :depends-on (#:woo
+  :depends-on (#:clack-handler-hunchentoot
 	       #:clack
 	       #:lack-middleware-static
 	       #:lack-middleware-mount

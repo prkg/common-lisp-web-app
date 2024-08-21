@@ -61,7 +61,7 @@
 
 (defun ws-broadcast (message)
   (loop :for con :being :the :hash-key :of *connections* :do
-    (websocket-driver:send con message)))
+    (wsd:send con message)))
 
 (defun ws-broadcast-from (con message)
   (ws-broadcast
@@ -72,12 +72,12 @@
 (defun ws-handle-new-connection (con)
   (setf (gethash con *connections*)
 	(format nil "user-~a" (random 100000)))
-  (websocket-driver:send con "Welcome"))
+  (wsd:send con "Welcome"))
 
 (defun ws-handle-close-connection (con)
-  (let ((message (format nil " .... ~a has left." (gethash con *connections*))))
-    (remhash con *connections*)
-    (ws-broadcast message)))
+  (when con
+    (ws-broadcast-from con "Left the chat")
+    (remhash con *connections*)))
 
 (defun ws-on-message (con)
   (lambda (msg)
@@ -85,19 +85,22 @@
       (ws-broadcast-from con (gethash :|chat_message| message)))))
 
 (defun ws-server (env)
-  (let ((ws (websocket-driver:make-server env)))
-    (websocket-driver:on :open ws
-			 (lambda ()
-			   (format t "New connection established~%")
-			   (ws-handle-new-connection ws)))
-    (websocket-driver:on :message ws (ws-on-message ws))
-    (websocket-driver:on :close ws
-			 (lambda (&key code reason)
-			   (format t "Daisconnected ~a ~a ~%" code reason)
-			   (ws-handle-close-connection ws)))
+  (let ((ws (wsd:make-server env)))
+    (wsd:on :open ws
+	    (lambda ()
+	      (format t "New connection established~%")
+	      (ws-handle-new-connection ws)))
+    (wsd:on :message ws (ws-on-message ws))
+    (wsd:on :close ws
+	    (lambda (&key code reason)
+	      (format t "Disconnected ~a ~a ~%" code reason)
+	      (ws-handle-close-connection ws)))
+    (wsd:on :error ws
+	    (lambda (error)
+	      (format *error-output* "Error Event [~S]~%" error)))
     (lambda (responder)
       (declare (ignore responder))
-      (websocket-driver:start-connection ws))))
+      (wsd:start-connection ws))))
 
 (defparameter *app*
   (lambda (env)
@@ -114,7 +117,7 @@
 	   :path "/static/"
 	   :root (truename #P"./public"))
 	  *app*)
-	 :server :woo
+	 :server :hunchentoot
 	 :address "0.0.0.0"
 	 :use-default-middlewares nil)))
 
